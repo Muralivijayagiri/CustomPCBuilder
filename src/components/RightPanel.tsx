@@ -1,6 +1,7 @@
-import { Sparkles, Send } from 'lucide-react';
+import { Sparkles, Send, Loader2 } from 'lucide-react';
 import { BuildState } from '../types';
 import { useState, useRef, useEffect } from 'react';
+import { streamChat, Message } from '../services/api';
 
 interface RightPanelProps {
   build: BuildState;
@@ -9,9 +10,11 @@ interface RightPanelProps {
 
 export function RightPanel({ build, onReset }: RightPanelProps) {
   const [chatInput, setChatInput] = useState('');
-  const [messages, setMessages] = useState([
-    { role: 'ai', text: 'System initialized. Awaiting component selection for architectural analysis.' }
+  const [messages, setMessages] = useState<Message[]>([
+    { role: 'model', content: 'System initialized. Awaiting component selection for architectural analysis.' }
   ]);
+  const [history, setHistory] = useState<Message[]>([]);
+  const [isStreaming, setIsStreaming] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const activeItems = [
@@ -32,21 +35,45 @@ export function RightPanel({ build, onReset }: RightPanelProps) {
 
   const handleChatSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!chatInput.trim()) return;
+    if (isStreaming || !chatInput.trim()) return;
 
-    setMessages(prev => [...prev, { role: 'user', text: chatInput }]);
+    const userMessageContent = chatInput.trim();
+    const newUserMessage: Message = { role: 'user', content: userMessageContent };
+    
+    setMessages(prev => [...prev, newUserMessage]);
     setChatInput('');
+    setIsStreaming(true);
+    setMessages(prev => [...prev, { role: 'model', content: '' }]);
 
-    setTimeout(() => {
-      const responses = [
-        "Thermal constraints are within acceptable parameters.",
-        "Bandwidth allocation is optimal for this configuration.",
-        "Power delivery headroom is sufficient for future expansion.",
-        "Architectural integrity verified."
-      ];
-      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-      setMessages(prev => [...prev, { role: 'ai', text: randomResponse }]);
-    }, 1000);
+    const currentHistory = [...history];
+    setHistory(prev => [...prev, newUserMessage]);
+
+    let streamBuffer = '';
+
+    streamChat(
+      userMessageContent,
+      currentHistory,
+      (token) => {
+        streamBuffer += token;
+        setMessages(prev => {
+          const newMessages = [...prev];
+          newMessages[newMessages.length - 1] = { role: 'model', content: streamBuffer };
+          return newMessages;
+        });
+      },
+      () => {
+        setIsStreaming(false);
+        setHistory(prev => [...prev, { role: 'model', content: streamBuffer }]);
+      },
+      (error) => {
+        setIsStreaming(false);
+        setMessages(prev => {
+          const newMessages = [...prev];
+          newMessages[newMessages.length - 1] = { role: 'model', content: error };
+          return newMessages;
+        });
+      }
+    );
   };
 
   return (
@@ -62,12 +89,12 @@ export function RightPanel({ build, onReset }: RightPanelProps) {
         <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar">
           {messages.map((msg, idx) => (
             <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[85%] p-4 text-xs leading-relaxed ${
+              <div className={`max-w-[85%] p-4 text-xs leading-relaxed whitespace-pre-wrap ${
                 msg.role === 'user' 
                   ? 'bg-layer-2 border border-cabinet-border/10 text-text-highlight rounded-2xl rounded-tr-sm shadow-sm' 
                   : 'bg-layer-1 border border-cabinet-border/5 text-text-primary rounded-2xl rounded-tl-sm shadow-sm border-l-2 border-l-category-selected'
               }`}>
-                {msg.text}
+                {msg.content}
               </div>
             </div>
           ))}
@@ -79,11 +106,12 @@ export function RightPanel({ build, onReset }: RightPanelProps) {
             type="text"
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
+            disabled={isStreaming}
             placeholder="e.g., Build me a gaming PC under ₹1L"
-            className="w-full bg-base border border-cabinet-border/20 p-4 text-[10px] tracking-widest font-bold uppercase text-text-highlight focus:outline-none focus:border-category-selected transition-colors placeholder:text-text-primary/30 pr-12 rounded-full shadow-inner"
+            className="w-full bg-base border border-cabinet-border/20 p-4 text-[10px] tracking-widest font-bold uppercase text-text-highlight focus:outline-none focus:border-category-selected transition-colors placeholder:text-text-primary/30 pr-12 rounded-full shadow-inner disabled:opacity-50"
           />
-          <button type="submit" className="absolute right-6 top-1/2 -translate-y-1/2 text-text-primary hover:text-category-selected transition-colors bg-layer-2 p-2 rounded-full shadow-sm">
-            <Send className="w-4 h-4" />
+          <button type="submit" disabled={isStreaming} className="absolute right-6 top-1/2 -translate-y-1/2 text-text-primary hover:text-category-selected transition-colors bg-layer-2 p-2 rounded-full shadow-sm disabled:opacity-50">
+            {isStreaming ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </button>
         </form>
       </div>
