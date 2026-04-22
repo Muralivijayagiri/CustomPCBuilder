@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@800&family=Orbitron:wght@900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-base: #000000;
+  --color-panel: #18181A;
+  --color-layer-1: #343433;
+  --color-layer-2: #464A45;
+  
+  --color-cabinet-border: #D9D9D9;
+  --color-slot-active: #ACB5D2;
+  
+  --color-text-primary: #C1C3BE;
+  --color-text-highlight: #FFFFFF;
+  
+  --color-category-selected: #6E87EB;
+  --color-ram-filled: #E5C56D;
+  --color-price-total: #94C3A7;
+  --color-reset-btn: #522926;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer base {
+  body {
+    @apply bg-base text-text-primary font-sans antialiased overflow-hidden;
+  }
+  
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 2s linear infinite;
+}
+
