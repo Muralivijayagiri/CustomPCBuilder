@@ -5,8 +5,11 @@ export interface PCComponent {
   type: ComponentType;
   brand: string;
   name: string;
-  specs: string;
+  specs: string; // the raw JSON string or empty
+  displaySpecs: { label: string; value: string }[];
   price: number;
+  image_url?: string;
+  buy_link?: string;
 }
 
 export interface BuildState {

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { checkContext, streamRecommendation } from '../services/gemini';
-import { fetchAllCategories } from '../services/supabase';
+import { fetchAllCategories, fetchAllComponents } from '../services/supabase';
 import { searchKnowledge } from '../services/rag';
 import { ChatRequest, Message } from '../types';
 
@@ -8,6 +8,15 @@ const router = Router();
 
 router.get('/health', (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+router.get('/components', async (req, res) => {
+  try {
+    const components = await fetchAllComponents();
+    res.json(components);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 router.post('/chat', async (req, res) => {
@@ -68,8 +77,7 @@ router.post('/chat', async (req, res) => {
       const stream = await streamRecommendation(history, message, components, knowledge, intentData);
       
       for await (const chunk of stream) {
-        // Handle getter vs method depending on exact TS type, usually chunk.text in newer @google/genai
-        const text = typeof chunk.text === 'function' ? chunk.text() : chunk.text;
+        const text = chunk.text;
         if (text) {
           res.write(text);
         }

@@ -1,6 +1,7 @@
 import { BuildState, ComponentType, PCComponent } from '../types';
 import { Cpu, HardDrive, MemoryStick, Power, X } from 'lucide-react';
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { getShortName } from '../utils/specMapper';
 
 interface Rect {
   left: number;
@@ -13,7 +14,7 @@ interface Rect {
   cy: number;
 }
 
-const TraceLine = ({ points, type, count = 1, isActive = true }: { points: {x: number, y: number}[], type: 'data' | 'power', count?: number, isActive?: boolean }) => {
+const TraceLine = ({ points, type, count = 1, isActive = true }: { key?: number | string, points: {x: number, y: number}[], type: 'data' | 'power', count?: number, isActive?: boolean }) => {
   const activeColor = type === 'data' ? '#00FF85' : '#E5C56D';
   const color = isActive ? activeColor : 'rgba(30,32,30,0.9)';
   const opacity = isActive ? 1 : 0.4;
@@ -368,7 +369,7 @@ export function Cabinet({ build, onDrop, onRemove, activeDragType }: CabinetProp
                 {component.brand}
               </span>
               <span className="text-[10px] font-bold text-text-highlight tracking-widest drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]">
-                {component.name}
+                {getShortName(component.name)}
               </span>
             </div>
           </div>
@@ -434,7 +435,7 @@ export function Cabinet({ build, onDrop, onRemove, activeDragType }: CabinetProp
                 {component.brand}
               </span>
               <span className="text-[9px] font-bold text-[#2a2a2a] tracking-tight leading-tight">
-                {component.name}
+                {getShortName(component.name)}
               </span>
             </div>
           </div>
@@ -473,7 +474,7 @@ export function Cabinet({ build, onDrop, onRemove, activeDragType }: CabinetProp
                   {component.brand}
                 </span>
                 <span className="text-[9px] font-medium text-text-highlight tracking-wider drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]">
-                  {component.name}
+                  {getShortName(component.name)}
                 </span>
               </div>
             </div>
@@ -506,7 +507,7 @@ export function Cabinet({ build, onDrop, onRemove, activeDragType }: CabinetProp
                     {component.brand}
                   </span>
                   <span className="text-sm font-bold text-text-highlight tracking-widest drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
-                    {component.name}
+                    {getShortName(component.name)}
                   </span>
                 </div>
               </div>
@@ -557,7 +558,7 @@ export function Cabinet({ build, onDrop, onRemove, activeDragType }: CabinetProp
             {/* Main Body (Text) */}
             <div className="flex-1 flex items-center justify-center relative">
               <span className="text-[9px] font-bold text-[#FFFFFF] tracking-widest -rotate-90 whitespace-nowrap">
-                {component.name}
+                {getShortName(component.name)}
               </span>
             </div>
 
@@ -614,7 +615,7 @@ export function Cabinet({ build, onDrop, onRemove, activeDragType }: CabinetProp
                   {component.brand}
                 </span>
                 <span className="text-base font-bold text-text-highlight tracking-wide drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
-                  {component.name}
+                  {getShortName(component.name)}
                 </span>
               </div>
             </div>
@@ -641,7 +642,7 @@ export function Cabinet({ build, onDrop, onRemove, activeDragType }: CabinetProp
             {component.brand}
           </span>
           <span className={`text-[10px] font-bold uppercase text-center ${isRam ? 'text-base' : 'text-text-highlight'}`}>
-            {component.name}
+            {getShortName(component.name)}
           </span>
         </div>
         <button

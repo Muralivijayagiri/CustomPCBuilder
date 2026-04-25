@@ -1,14 +1,16 @@
 import { Sparkles, Send, Loader2 } from 'lucide-react';
 import { BuildState } from '../types';
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { streamChat, Message } from '../services/api';
+import { getShortName } from '../utils/specMapper';
 
 interface RightPanelProps {
   build: BuildState;
   onReset: () => void;
+  onCheckout: () => void;
 }
 
-export function RightPanel({ build, onReset }: RightPanelProps) {
+export function RightPanel({ build, onReset, onCheckout }: RightPanelProps) {
   const [chatInput, setChatInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([
     { role: 'model', content: 'System initialized. Awaiting component selection for architectural analysis.' }
@@ -130,8 +132,8 @@ export function RightPanel({ build, onReset }: RightPanelProps) {
           ) : (
             activeItems.map((item, idx) => (
               <div key={idx} className="flex justify-between items-start text-xs border-b border-cabinet-border/10 pb-2">
-                <div className="flex flex-col">
-                  <span className="text-text-highlight font-medium">{item?.name}</span>
+                <div className="flex flex-col pr-2">
+                  <span className="text-text-highlight font-medium line-clamp-1">{getShortName(item?.name || '')}</span>
                   <span className="text-[9px] text-text-primary uppercase tracking-wider">{item?.type}</span>
                 </div>
                 <span className="font-mono text-text-primary">₹{item?.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
@@ -156,7 +158,9 @@ export function RightPanel({ build, onReset }: RightPanelProps) {
               Reset
             </button>
             <button 
-              className="bg-cabinet-border text-base py-4 text-[10px] font-bold uppercase tracking-[0.15em] hover:brightness-110 transition-colors rounded-full shadow-md"
+              onClick={onCheckout}
+              disabled={activeItems.length === 0}
+              className="bg-cabinet-border text-base py-4 text-[10px] font-bold uppercase tracking-[0.15em] hover:brightness-110 transition-colors rounded-full shadow-md disabled:opacity-50"
             >
               Checkout
             </button>
