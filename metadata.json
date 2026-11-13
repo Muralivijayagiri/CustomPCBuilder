@@ -1,0 +1,5 @@
+{
+  "name": "AI PC Builder",
+  "description": "An AI-powered drag-and-drop PC building configurator that uses Gemini and SERP API to recommend components.",
+  "requestFramePermissions": []
+}
