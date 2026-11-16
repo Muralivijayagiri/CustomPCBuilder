@@ -3,6 +3,7 @@ import { BuildState, Message } from '../types';
 import React, { useState, useRef, useEffect } from 'react';
 import { streamChat } from '../services/api';
 import { getShortName } from '../utils/specMapper';
+import { ChatLoadingIndicator } from './chat/ChatLoadingIndicator';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -19,6 +20,7 @@ export function RightPanel({ build, onReset, onCheckout }: RightPanelProps) {
   ]);
   const [history, setHistory] = useState<Message[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [isWaiting, setIsWaiting] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const activeItems = [
@@ -47,17 +49,23 @@ export function RightPanel({ build, onReset, onCheckout }: RightPanelProps) {
     setMessages(prev => [...prev, newUserMessage]);
     setChatInput('');
     setIsStreaming(true);
+    setIsWaiting(true);
     setMessages(prev => [...prev, { role: 'model', content: '' }]);
 
     const currentHistory = [...history];
     setHistory(prev => [...prev, newUserMessage]);
 
     let streamBuffer = '';
+    let receivedFirstToken = false;
 
     streamChat(
       userMessageContent,
       currentHistory,
       (token) => {
+        if (!receivedFirstToken) {
+          receivedFirstToken = true;
+          setIsWaiting(false);
+        }
         streamBuffer += token;
         setMessages(prev => {
           const newMessages = [...prev];
@@ -66,10 +74,12 @@ export function RightPanel({ build, onReset, onCheckout }: RightPanelProps) {
         });
       },
       () => {
+        setIsWaiting(false);
         setIsStreaming(false);
         setHistory(prev => [...prev, { role: 'model', content: streamBuffer }]);
       },
       (error) => {
+        setIsWaiting(false);
         setIsStreaming(false);
         setMessages(prev => {
           const newMessages = [...prev];
@@ -87,27 +97,33 @@ export function RightPanel({ build, onReset, onCheckout }: RightPanelProps) {
       <div className="flex-1 bg-panel border border-cabinet-border/10 flex flex-col overflow-hidden rounded-3xl shadow-lg">
         <div className="p-4 border-b border-cabinet-border/10 flex items-center gap-3 bg-layer-1">
           <Sparkles className="w-4 h-4 text-category-selected" />
-          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-highlight">Architect AI</h2>
+          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-highlight">BuildBuddy </h2>
         </div>
         
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar">
-          {messages.map((msg, idx) => (
-            <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[85%] p-4 text-xs leading-relaxed ${
-                msg.role === 'user' 
-                  ? 'bg-layer-2 border border-cabinet-border/10 text-text-highlight rounded-2xl rounded-tr-sm shadow-sm whitespace-pre-wrap' 
-                  : 'bg-layer-1 border border-cabinet-border/5 text-text-primary rounded-2xl rounded-tl-sm shadow-sm border-l-2 border-l-category-selected'
-              }`}>
-                {msg.role === 'user' ? (
-                  msg.content
-                ) : (
-                  <div className="prose prose-invert prose-sm max-w-none">
-                    <Markdown remarkPlugins={[remarkGfm]}>{msg.content}</Markdown>
-                  </div>
-                )}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar" aria-busy={isWaiting}>
+          {messages.map((msg, idx) => {
+            const isPending = isWaiting && msg.role === 'model' && idx === messages.length - 1;
+
+            return (
+              <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[85%] p-4 text-xs leading-relaxed ${
+                  msg.role === 'user' 
+                    ? 'bg-layer-2 border border-cabinet-border/10 text-text-highlight rounded-2xl rounded-tr-sm shadow-sm whitespace-pre-wrap' 
+                    : 'bg-layer-1 border border-cabinet-border/5 text-text-primary rounded-2xl rounded-tl-sm shadow-sm border-l-2 border-l-category-selected'
+                }`}>
+                  {msg.role === 'user' ? (
+                    msg.content
+                  ) : isPending ? (
+                    <ChatLoadingIndicator />
+                  ) : (
+                    <div className="prose prose-invert prose-sm max-w-none">
+                      <Markdown remarkPlugins={[remarkGfm]}>{msg.content}</Markdown>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           <div ref={chatEndRef} />
         </div>
 
