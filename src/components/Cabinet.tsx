@@ -299,7 +299,7 @@ export function Cabinet({ build, onDrop, onRemove, activeDragType }: CabinetProp
           <div className="flex items-center gap-4">
             <div className={`w-2 h-2 rounded-full ${build.CABINET ? 'bg-[#4CAF50] shadow-[0_0_8px_#4CAF50]' : 'bg-cabinet-border/50'}`}></div>
             <span className="text-xs font-bold tracking-[0.2em] uppercase text-text-highlight drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
-              {build.CABINET ? build.CABINET.name : 'DRAG ENCLOSURE HERE'}
+              {build.CABINET ? build.CABINET.name : 'DRAG COMPONENTS HERE!'}
             </span>
           </div>
 
