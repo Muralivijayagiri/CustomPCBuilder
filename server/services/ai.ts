@@ -3,8 +3,7 @@ import { HfInference } from '@huggingface/inference';
 import { config } from '../config/env';
 import { contextCheckerPrompt } from '../prompts/contextChecker';
 import { recommenderPrompt } from '../prompts/recommender';
-import { Message, ComponentRecord, KnowledgeDocument } from '../types';
-import { getShortName } from '../../src/utils/specMapper';
+import { Message, ComponentRecord, KnowledgeDocument, UserIntent } from '../../shared/types';
 
 let aiClient: GoogleGenAI | null = null;
 function getAi() {
@@ -17,7 +16,7 @@ function getAi() {
 let hfClient: HfInference | null = null;
 function getHf() {
   if (!config.hfToken) {
-    throw new Error("HUGGINGFACEHUB_API_TOKEN is missing or invalid. Please add it to the environment variables.");
+    throw new Error("HF_TOKEN is missing or invalid. Please add it to the environment variables.");
   }
   if (!hfClient) {
     hfClient = new HfInference(config.hfToken);
@@ -97,7 +96,7 @@ export async function streamRecommendation(
   newMessage: string,
   components: ComponentRecord[],
   knowledge: KnowledgeDocument[],
-  intent: { budget: number, use_case: string, os: string }
+  intent: UserIntent
 ) {
   
   const knowledgeSection = knowledge.map((k, i) => `[Chunk ${i+1}]: ${k.content}`).join('\n\n');

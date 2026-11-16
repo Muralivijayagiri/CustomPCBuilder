@@ -1,10 +1,11 @@
 import { getKeywordsForCategory } from './queries';
-import { searchProducts, getProductDetail, delay } from './fetcher';
+import { searchProducts, delay } from './fetcher';
 import { classifyCategory } from './categories';
-import { parseSearchResult, parseProductDetail } from './parser';
+import { parseSearchResult } from './parser';
 import { upsertComponents } from '../supabase';
+import type { ComponentCategory } from '../../../shared/types';
 
-export async function refreshCategory(category: string) {
+export async function refreshCategory(category: ComponentCategory) {
   const keywords = getKeywordsForCategory(category);
   if (keywords.length === 0) {
     return { category, total: 0, inserted: 0, failed: 0 };
@@ -26,7 +27,7 @@ export async function refreshCategory(category: string) {
       if (!parsedSearch) continue;
 
       const classifiedCat = classifyCategory(parsedSearch.name, keyword);
-      if (classifiedCat === 'Unknown') continue;
+      if (!classifiedCat) continue;
 
       parsedSearch.category = classifiedCat; // Assign the correctly classified one
       allComponents.push(parsedSearch);

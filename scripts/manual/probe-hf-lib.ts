@@ -1,5 +1,5 @@
 import { HfInference } from '@huggingface/inference';
-import { config } from './server/config/env';
+import { config } from '../../server/config/env';
 
 const hf = new HfInference(config.hfToken);
 

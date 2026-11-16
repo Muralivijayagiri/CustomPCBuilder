@@ -1,7 +1,7 @@
 import { Sparkles, Send, Loader2 } from 'lucide-react';
-import { BuildState } from '../types';
+import { BuildState, Message } from '../types';
 import React, { useState, useRef, useEffect } from 'react';
-import { streamChat, Message } from '../services/api';
+import { streamChat } from '../services/api';
 import { getShortName } from '../utils/specMapper';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';

@@ -1,6 +1,4 @@
-import { config } from './server/config/env';
-import { searchProducts } from './server/services/serp/fetcher';
-import { parseSearchResult } from './server/services/serp/parser';
+import { searchProducts } from '../../server/services/serp/fetcher';
 
 async function run() {
   const rs = await searchProducts("desktop CPU");

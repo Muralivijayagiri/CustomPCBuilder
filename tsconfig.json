@@ -25,6 +25,11 @@
   },
   "include": [
     "src",
-    "server"
+    "server",
+    "shared",
+    "tests",
+    "scripts",
+    "vite.config.ts",
+    "vitest.config.ts"
   ]
 }

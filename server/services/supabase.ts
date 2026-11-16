@@ -1,11 +1,15 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { config } from '../config/env';
-import { ComponentRecord } from '../types';
-import { componentsData } from '../../src/data';
+import { ComponentCategory, ComponentRecord } from '../../shared/types';
+import { categoryQueryValues, normalizeCategory } from '../../shared/categories';
+import { componentsData } from '../../shared/data';
 
-export const supabase = createClient(config.supabaseUrl, config.supabaseAnonKey);
+export const supabase: SupabaseClient | null =
+  config.supabaseUrl && config.supabaseAnonKey
+    ? createClient(config.supabaseUrl, config.supabaseAnonKey)
+    : null;
 
-function getFallbackComponents(budget?: number, category: string = 'ALL'): ComponentRecord[] {
+function getFallbackComponents(budget?: number, category: ComponentCategory | 'ALL' = 'ALL'): ComponentRecord[] {
   let items: ComponentRecord[] = componentsData.map((c) => ({
     id: String(c.id),
     name: c.name,
@@ -16,7 +20,7 @@ function getFallbackComponents(budget?: number, category: string = 'ALL'): Compo
     buy_link: c.buy_link ?? null,
     image_url: c.image_url,
     source: 'local-catalog',
-  } as ComponentRecord & { image_url?: string; source?: string }));
+  }));
 
   if (typeof budget === 'number') {
     items = items.filter((item) => item.price <= budget);
@@ -31,7 +35,18 @@ function getFallbackComponents(budget?: number, category: string = 'ALL'): Compo
   });
 }
 
-function filterValidComponents(data: ComponentRecord[]): ComponentRecord[] {
+function normalizeComponents(data: any[]): ComponentRecord[] {
+  return data.flatMap((comp): ComponentRecord[] => {
+    const category = normalizeCategory(comp.category);
+    if (!category) {
+      console.warn(`Skipping component ${comp.name || comp.id} with unknown category:`, comp.category);
+      return [];
+    }
+    return [{ ...comp, category }];
+  });
+}
+
+export function filterValidComponents(data: ComponentRecord[]): ComponentRecord[] {
   return data.filter(comp => {
     if (comp.category === 'CPU') {
       const b = (comp.brand || '').toLowerCase();
@@ -47,7 +62,11 @@ function filterValidComponents(data: ComponentRecord[]): ComponentRecord[] {
   });
 }
 
-export async function fetchComponents(budget: number, category: string): Promise<ComponentRecord[]> {
+export async function fetchComponents(budget: number, category: ComponentCategory | 'ALL'): Promise<ComponentRecord[]> {
+  if (!supabase) {
+    return filterValidComponents(getFallbackComponents(budget, category));
+  }
+
   try {
     let query = supabase
       .from('components')
@@ -55,7 +74,7 @@ export async function fetchComponents(budget: number, category: string): Promise
       .lte('price', budget);
 
     if (category !== 'ALL') {
-      query = query.eq('category', category);
+      query = query.in('category', categoryQueryValues(category));
     }
 
     const { data, error } = await query
@@ -67,7 +86,7 @@ export async function fetchComponents(budget: number, category: string): Promise
       return filterValidComponents(getFallbackComponents(budget, category));
     }
 
-    return filterValidComponents(data as ComponentRecord[]);
+    return filterValidComponents(normalizeComponents(data));
   } catch (err: any) {
     console.warn('Supabase fetchComponents error, using local fallback catalog:', err?.message || err);
     return filterValidComponents(getFallbackComponents(budget, category));
@@ -104,6 +123,10 @@ export async function fetchAllCategories(budget: number): Promise<ComponentRecor
 }
 
 export async function fetchAllComponents(): Promise<ComponentRecord[]> {
+  if (!supabase) {
+    return filterValidComponents(getFallbackComponents());
+  }
+
   try {
     const { data, error } = await supabase
       .from('components')
@@ -116,7 +139,7 @@ export async function fetchAllComponents(): Promise<ComponentRecord[]> {
       return filterValidComponents(getFallbackComponents());
     }
 
-    return filterValidComponents(data as ComponentRecord[]);
+    return filterValidComponents(normalizeComponents(data));
   } catch (err: any) {
     console.warn('Supabase fetchAllComponents error, using local fallback catalog:', err?.message || err);
     return filterValidComponents(getFallbackComponents());
@@ -124,11 +147,19 @@ export async function fetchAllComponents(): Promise<ComponentRecord[]> {
 }
 
 export async function upsertComponent(component: any): Promise<void> {
+  const category = normalizeCategory(component.category);
+  if (!category) {
+    throw new Error(`Invalid component category: ${component.category}`);
+  }
+  if (!supabase) {
+    throw new Error('Supabase is not configured. Set SUPABASE_URL and SUPABASE_ANON_KEY to refresh components.');
+  }
+
   const { error } = await supabase
     .from('components')
     .upsert({
       name: component.name,
-      category: component.category,
+      category,
       brand: component.brand,
       price: component.price,
       specs: component.specs,

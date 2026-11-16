@@ -4,11 +4,10 @@ import { config } from './config/env';
 import chatRouter from './routes/chat';
 import refreshRouter from './routes/refresh';
 import path from 'path';
-import { createServer as createViteServer } from 'vite';
 
 async function startServer() {
   const app = express();
-  const PORT = process.env.PORT || 3000;
+  const PORT = config.port;
 
   app.use(cors());
   app.use(express.json());
@@ -17,6 +16,8 @@ async function startServer() {
   app.use('/api', refreshRouter);
 
   if (process.env.NODE_ENV !== "production") {
+    // Imported lazily so production builds do not require Vite at runtime.
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",

@@ -1,8 +1,8 @@
-import { config } from './server/config/env';
+import { config } from '../../server/config/env';
 
 async function test() {
   try {
-    const res = await fetch('https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3', {
+    const res = await fetch('https://api-inference.huggingface.co/models/google/flan-t5-small', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${config.hfToken}`,
@@ -12,9 +12,9 @@ async function test() {
         inputs: 'Hello world',
       })
     });
-    console.log('Status HTTP:', res.status);
-    const text = await res.text();
-    console.log('Raw text:', text);
+    const data = await res.json();
+    console.log('Status:', res.status);
+    console.log('Data:', data);
   } catch (err: any) {
     console.error('Fetch error:', err.message);
   }

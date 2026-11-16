@@ -1,7 +1,7 @@
-import fetch from 'node-fetch';
+const baseUrl = process.env.API_URL || 'http://localhost:3000';
 
 async function run() {
-  const r1 = await fetch('http://localhost:3001/api/refresh', {
+  const r1 = await fetch(`${baseUrl}/api/refresh`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ category: 'INVALID' })
@@ -9,8 +9,9 @@ async function run() {
   console.log('Test 1 status:', r1.status);
   console.log('Test 1 body:', await r1.text());
 
-  // We are using a dummy key, so SerpAPI will fail and return [], which will result in total: 0
-  const r2 = await fetch('http://localhost:3001/api/refresh', {
+  // Without a SerpAPI key this falls back to AI-generated listings, so only
+  // run the valid-category probe when you intend to hit the configured DB.
+  const r2 = await fetch(`${baseUrl}/api/refresh`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ category: 'RAM' })

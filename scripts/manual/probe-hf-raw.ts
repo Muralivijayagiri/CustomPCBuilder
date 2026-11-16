@@ -1,4 +1,4 @@
-import { config } from './server/config/env';
+import { config } from '../../server/config/env';
 
 async function test(model: string) {
   console.log('Testing', model);

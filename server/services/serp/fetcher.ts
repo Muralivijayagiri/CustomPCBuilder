@@ -13,7 +13,7 @@ function getAi() {
 let hfClient: HfInference | null = null;
 function getHf() {
   if (!config.hfToken) {
-    throw new Error("HUGGINGFACEHUB_API_TOKEN is missing or invalid. Please add it to the environment variables.");
+    throw new Error("HF_TOKEN is missing or invalid. Please add it to the environment variables.");
   }
   if (!hfClient) {
     hfClient = new HfInference(config.hfToken);
@@ -27,13 +27,13 @@ export async function delay(ms: number) {
 
 export async function searchProducts(keyword: string) {
   let useFallback = false;
-  if (!config.SERP_API_KEY) {
+  if (!config.serpApiKey) {
     useFallback = true;
   }
   
   if (!useFallback) {
     try {
-      const url = `https://serpapi.com/search?engine=amazon&amazon_domain=amazon.in&k=${encodeURIComponent(keyword)}&api_key=${config.SERP_API_KEY}`;
+      const url = `https://serpapi.com/search?engine=amazon&amazon_domain=amazon.in&k=${encodeURIComponent(keyword)}&api_key=${config.serpApiKey}`;
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
@@ -94,11 +94,11 @@ export async function searchProducts(keyword: string) {
 }
 
 export async function getProductDetail(asin: string, fallbackPrice: number, category: string) {
-  if (!config.SERP_API_KEY) {
+  if (!config.serpApiKey) {
     throw new Error('SERP_API_KEY is not configured in the environment.');
   }
   try {
-    const url = `https://serpapi.com/search?engine=amazon_product&amazon_domain=amazon.in&asin=${encodeURIComponent(asin)}&api_key=${config.SERP_API_KEY}`;
+    const url = `https://serpapi.com/search?engine=amazon_product&amazon_domain=amazon.in&asin=${encodeURIComponent(asin)}&api_key=${config.serpApiKey}`;
     const res = await fetch(url);
     if (!res.ok) {
       throw new Error(`SerpAPI detail failed with status ${res.status}`);

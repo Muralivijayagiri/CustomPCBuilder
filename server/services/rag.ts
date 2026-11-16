@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { KnowledgeDocument } from '../types';
+import { KnowledgeDocument } from '../../shared/types';
 
 const FALLBACK_KNOWLEDGE: KnowledgeDocument[] = [
   {
@@ -17,6 +17,10 @@ const FALLBACK_KNOWLEDGE: KnowledgeDocument[] = [
 ];
 
 export async function searchKnowledge(query: string): Promise<KnowledgeDocument[]> {
+  if (!supabase) {
+    return FALLBACK_KNOWLEDGE;
+  }
+
   try {
     // Uses Supabase's built-in textSearch which maps directly to the required Postgres 
     // full text search: to_tsvector('english', content) @@ plainto_tsquery('english', query)

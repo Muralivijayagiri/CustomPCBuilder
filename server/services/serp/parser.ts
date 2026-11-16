@@ -1,4 +1,6 @@
-export function parseSearchResult(result: any, category: string) {
+import type { ComponentCategory } from '../../../shared/types';
+
+export function parseSearchResult(result: any, category: ComponentCategory) {
   if (!result) return null;
 
   // Enhance price extraction targeting more SerpAPI formats
@@ -37,7 +39,7 @@ export function parseSearchResult(result: any, category: string) {
   };
 }
 
-export function parseProductDetail(detail: any, category: string, fallbackPrice: number) {
+export function parseProductDetail(detail: any, category: ComponentCategory, fallbackPrice: number) {
   if (!detail || !detail.product_results) return null;
   const pr = detail.product_results;
   

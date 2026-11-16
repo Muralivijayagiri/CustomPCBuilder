@@ -1,12 +1,8 @@
-import { PCComponent } from '../types';
+import { Message, PCComponent } from '../types';
+import { normalizeCategory } from '../../shared/categories';
 import { getDisplaySpecs } from '../utils/specMapper';
 import { summarizeSpecs } from '../utils/summarizeSpecs';
-import { componentsData } from '../data';
-
-export interface Message {
-  role: 'user' | 'model';
-  content: string;
-}
+import { componentsData } from '../../shared/data';
 
 export async function fetchDbComponents(): Promise<PCComponent[]> {
   try {
@@ -17,25 +13,31 @@ export async function fetchDbComponents(): Promise<PCComponent[]> {
     const data = await res.json();
     
     // Transform backend ComponentRecord to frontend PCComponent mapping
-    return data.map((c: any) => {
-      const parsedSummary = summarizeSpecs(c.category, c.specs, c.name);
+    return data.flatMap((c: any): PCComponent[] => {
+      const category = normalizeCategory(c.category);
+      if (!category) {
+        console.warn('Skipping component with unknown category:', c.category);
+        return [];
+      }
+
+      const parsedSummary = summarizeSpecs(category, c.specs, c.name);
       const fallbackSummary =
         typeof c.specs === 'string'
           ? c.specs
           : c.specs?.summary || '';
 
-      return {
+      return [{
         id: c.id,
-        type: c.category.toUpperCase(),
+        type: category,
         brand: c.brand,
         name: c.name,
         specs: c.specs ? JSON.stringify(c.specs).replace(/["{}]/g, '').replace(/:/g, ': ') : '',
-        displaySpecs: getDisplaySpecs(c.category, c.specs, c.name),
+        displaySpecs: getDisplaySpecs(category, c.specs, c.name),
         summary: parsedSummary || fallbackSummary,
         price: c.price,
         image_url: c.image_url,
         buy_link: c.buy_link
-      };
+      }];
     });
   } catch (err) {
     console.warn('Falling back to local componentsData:', err);

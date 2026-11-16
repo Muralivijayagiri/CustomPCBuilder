@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { checkContext, streamRecommendation } from '../services/gemini';
+import { checkContext, streamRecommendation } from '../services/ai';
 import { fetchAllCategories, fetchAllComponents } from '../services/supabase';
 import { searchKnowledge } from '../services/rag';
-import { ChatRequest, Message } from '../types';
+import { ChatRequest, UserIntent } from '../../shared/types';
 
 const router = Router();
 
@@ -45,7 +45,7 @@ router.post('/chat', async (req, res) => {
     }
 
     // Extract JSON intent
-    let intentData;
+    let intentData: UserIntent;
     try {
       const parts = contextResponse.split('CONTEXT_COMPLETE:');
       const jsonString = parts[1].trim();
